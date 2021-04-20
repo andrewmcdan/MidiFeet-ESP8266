@@ -151,7 +151,7 @@ class InsertActionDropDown {
         this.action = actionObj;
 
         this.form = '<form id="' + classAndIdPrefix + actionCount + 'form" class="' + classAndIdPrefix + 'FormClass"><label>Action: </label><select class="' + classAndIdPrefix + '_actionDropDown actionDropDown" id="' + classAndIdPrefix + actionCount + '">';
-        for (let i = 0; i < 18; i++) {
+        for (let i = 0; i < 19; i++) {
             this.form += '<option value="' + i + '"';
             this.form += this.action.action == i ? 'selected="selected"' : ' ';
             this.form += '>' + actionNamesArr[i] + '</option>';
