@@ -1,0 +1,177 @@
+.header {
+    text-align: center;
+    padding: 20px;
+    border-bottom: 1px solid black;
+    height: 40px;
+}
+
+.scenes {
+    float: left;
+    padding: 2px;
+}
+
+.saveLoad {
+    /* border: 1px solid black; */
+    margin-left: 20px;
+}
+
+/* .actionOptionLabel{
+    background-color: rgb(253, 148, 148);
+} */
+
+.tooltip .tooltiptextHidden {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+}
+
+.tooltiptextHidden{
+    display: none;
+}
+
+.tooltiptext {
+    visibility: visible;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+
+    /* Position the tooltip */
+    position: absolute;
+    top:50px;
+    z-index: 1;
+}
+
+
+.paddingNorm {
+    padding: 5px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: 220px auto 0.5fr;
+    grid-template-rows: 0.5fr auto auto auto;
+    gap: 2px 2px;
+    grid-template-areas:
+        "head head head"
+        "mainBtnSel mainAct toolTip"
+        "ExtBtnSel extAct toolTip"
+        "midiCCsel midiAct toolTip"
+        "controlPortSel controlPortOpts toolTip";
+}
+
+.grid-container>header {
+    grid-area: head;
+    border: 1px solid black;
+    /* height: 100%; */
+}
+
+.grid-container>mainBtnSel {
+    grid-area: mainBtnSel;
+    border: 1px solid black;
+    /* height: 100%; */
+}
+
+.grid-container>mainAct {
+    grid-area: mainAct;
+    border: 1px solid black;
+    /* height: 100%; */
+}
+
+.grid-container>mainAct form {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 5px;
+}
+
+.grid-container>extAct form {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 5px;
+}
+
+.grid-container>ExtBtnSel {
+    grid-area: ExtBtnSel;
+    border: 1px solid black;
+    /* height: 100%; */
+}
+
+.grid-container>extAct {
+    grid-area: extAct;
+    border: 1px solid black;
+    /* height: 100%; */
+}
+
+.grid-container>midiCCsel {
+    grid-area: midiCCsel;
+    border: 1px solid black;
+    /* height: 100%; */
+}
+
+.grid-container>midiAct {
+    grid-area: midiAct;
+    border: 1px solid black;
+    /* height: 100%; */
+}
+
+.grid-container>toolTip {
+    grid-area: toolTip;
+    border: 1px solid black;
+    /* height: 100%; */
+    padding: 5px;
+}
+
+.grid-container>controlPortOpts{
+    grid-area: controlPortOpts;
+    border: 1px solid black;
+}
+
+.grid-container>controlPortSel{
+    grid-area: controlPortSel;
+    border: 1px solid black;
+}
+
+.grid-container>midiCCsel form label {
+
+}
+
+.formLabel{
+    /* width: 100px; */
+    margin-top: 5px;
+}
+
+body {
+    background: rgb(238, 238, 238);
+    background: linear-gradient(180deg, rgba(238, 238, 238, 1) 0%, rgba(156, 156, 156, 1) 100%) fixed;
+    height: 100vh;
+}
+
+label {
+    padding-left: 15px;
+}
+
+/* Responsive layout - makes the two columns/boxes stack on top of each other instead of next to each other, on small screens */
+@media (max-width: 600px) {
+    inputType {
+        width: 100%;
+        height: auto;
+    }
+
+    .scenes {
+        float: none;
+    }
+
+    .header {
+        height: 80px;
+    }
+}

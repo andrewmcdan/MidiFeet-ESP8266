@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>MidiFT</title>
+  <meta name="description" content="MIDI Feet: A MIDI controller you operate with your feet!">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="grid-container">
+        <header class="paddingNorm">
+            <div class="scenes tooltip">Scene Number: <span class="tooltiptextHidden" id="tooltiptext">When changed, this loads a scene from the controller.</span></div>
+            <input class="scenes" type="number" id="sceneNumberInputField" name="sceneNumber" step="1" value="1" min="1" max="100" required onmouseover='document.getElementById("tooltiptext").className="tooltiptext";' onmouseout='document.getElementById("tooltiptext").className="tooltiptextHidden";'/>
+            <label class="scenes"><input type="checkbox" id="resetBtnNumberSelectionsOnSceneChangeBOOL"/>Reset selected button numbers on scene number update</label>
+            <button class="scenes saveLoad" id="saveDataToControllerButton">Save data to controller </button>
+            <button class="scenes saveLoad" id="loadDataFromControllerButton">Load data from controller </button>
+            <button class="scenes saveLoad" id="resetCurrentSceneToDefaults">Reset Current Scene To Defaults </button>
+        </header>
+            <mainBtnSel class="paddingNorm">
+                <form>
+                    <label>Main Button:</label>
+                    <select name="btnNum" id="btnNum">
+                      <option value="1">Top row #1</option>
+                      <option value="3">Top row #2</option>
+                      <option value="5">Top row #3</option>
+                      <option value="7">Top row #4</option>
+                      <option value="9">Top row #5</option>
+                      <option value="2">Btm row #1</option>
+                      <option value="4">Btm row #2</option>
+                      <option value="6">Btm row #3</option>
+                      <option value="8">Btm row #4</option>
+                      <option value="10">Btm row #5</option>
+                    </select>
+                  </form>
+            </mainBtnSel>
+            <mainAct id="mainBtnsActions" class="paddingNorm">
+            </mainAct>
+            <ExtBtnSel class="paddingNorm">
+                <form>
+                    <label>Ext Pedal Port:</label>
+                    <select name="extPedalPortNum" id="extPedalPortNum">
+                      <option value="1">Port #1</option>
+                      <option value="2">Port #2</option>
+                      <option value="3">Port #3</option>
+                      <option value="4">Port #4</option>
+                    </select>
+                  </form>
+            </ExtBtnSel>
+            <extAct id="extPedalsActions" class="paddingNorm">
+
+            </extAct>
+            <controlPortSel  class="paddingNorm">
+                Output Port Configuration
+            </controlPortSel>
+            <controlPortOpts class="paddingNorm">
+
+            </controlPortOpts>
+            <midiCCsel class="paddingNorm">
+                Midi CC Action Trigger
+                <form>
+                    <!-- <label> -->
+                        <div class="formLabel">Midi In Port:</div>
+                    <!-- </label> -->
+                    <select name="midiInPort" id="midiCCsel_MidiInPortSelectEl">
+                      <option value="1">Port #1</option>
+                      <option value="2">Port #2</option>
+                      <option value="3">Port #3</option>
+                      <option value="4">Port #4</option>
+                    </select>
+                    <!-- <label> -->
+                        <div class="formLabel">Midi CC#:</div>
+                    <!-- </label> -->
+                    <select name="midiInPort" id="midiCCsel_MidiInCCSelectEl">
+                      <option value="1">Port #1</option>
+                      <option value="2">Port #2</option>
+                      <option value="3">Port #3</option>
+                      <option value="4">Port #4</option>
+                    </select>
+                </form>
+            </midiCCsel>
+            <midiAct class="paddingNorm">
+                
+            </midiAct>
+            <toolTip id="toolTipArea">
+                Tool tips will show up here when mousing over elements.
+            </toolTip>
+    </div>
+    <!-- 
+    <section class="inputTypeSection">
+        <inputType>
+            Ext pedals
+        </inputType>
+        <inputOptions>
+            actions
+        </inputOptions>
+    </section>
+    <section class="inputTypeSection">
+        <inputType>
+            Midi Input
+        </inputType>
+        <inputOptions>
+            Actions
+        </inputOptions>
+    </section> -->
+</body>
+<script src="script.js"></script>
+</html>
