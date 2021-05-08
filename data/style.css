@@ -67,7 +67,9 @@
         "mainBtnSel mainAct toolTip"
         "ExtBtnSel extAct toolTip"
         "midiCCsel midiAct toolTip"
-        "controlPortSel controlPortOpts toolTip";
+        "controlPortSel controlPortOpts toolTip"
+        "inputPortSel inputPortOpts toolTip"
+        "otherOpts otherOpts otherOpts";
 }
 
 .grid-container>header {
@@ -141,6 +143,21 @@
     border: 1px solid black;
 }
 
+.grid-container>inputPortOpts{
+    grid-area: inputPortOpts;
+    border: 1px solid black;
+}
+
+.grid-container>inputPortSel{
+    grid-area: inputPortSel;
+    border: 1px solid black;
+}
+
+.grid-container>otherOpts{
+    grid-area: otherOpts;
+    border: 1px solid black;
+}
+
 .grid-container>midiCCsel form label {
 
 }
@@ -174,4 +191,12 @@ label {
     .header {
         height: 80px;
     }
+}
+
+.configSaveButton{
+    /* background-color: rgb(200, 200, 200); */
+    border: 1px solid black;
+    margin-top: 20px;
+    width:fit-content;
+    padding: 2px;
 }

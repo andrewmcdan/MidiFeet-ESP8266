@@ -38,23 +38,259 @@
             <ExtBtnSel class="paddingNorm">
                 <form>
                     <label>Ext Pedal Port:</label>
-                    <select name="extPedalPortNum" id="extPedalPortNum">
-                      <option value="1">Port #1</option>
-                      <option value="2">Port #2</option>
-                      <option value="3">Port #3</option>
-                      <option value="4">Port #4</option>
+                    <select id="extPedalPortNum">
+                        <option value="1">Port #1</option>
+                        <option value="2">Port #2</option>
+                        <option value="3">Port #3</option>
+                        <option value="4">Port #4</option>
                     </select>
-                  </form>
+                </form>
             </ExtBtnSel>
             <extAct id="extPedalsActions" class="paddingNorm">
 
             </extAct>
-            <controlPortSel  class="paddingNorm">
-                Output Port Configuration
+            <controlPortSel  class="paddingNorm" id="outputPortConfig">
+                <div>Output Port Configuration</div>
+                <button class="configSaveButton  saveLoad">Save Configuration Data</button>
             </controlPortSel>
             <controlPortOpts class="paddingNorm">
-
+                <div>
+                    <form>Output Port 1:
+                        <label>Mode</label>
+                        <select id="outputPort1Mode">
+                            <option value=0>Single (TS)</option>
+                            <option value=1>Dual (TRS)</option>
+                            <option value=2>Disabled</option>
+                        </select>
+                        <label>Polarity</label>
+                        <select id="outputPort1Pol">
+                            <option value="false">Normal</option>
+                            <option value="true">Inverted</option>
+                        </select>
+                    </form>
+                </div>
+                <div>
+                    <form>Output Port 2:
+                        <label>Mode</label>
+                        <select id="outputPort2Mode">
+                            <option value=0>Single (TS)</option>
+                            <option value=1>Dual (TRS)</option>
+                            <option value=2>Disabled</option>
+                        </select>
+                        <label>Polarity</label>
+                        <select id="outputPort2Pol">
+                            <option value="false">Normal</option>
+                            <option value="true">Inverted</option>
+                        </select>
+                    </form>
+                </div>
+                <div>
+                    <form>Output Port 3:
+                        <label>Mode</label>
+                        <select id="outputPort3Mode">
+                            <option value=0>Single (TS)</option>
+                            <option value=1>Dual (TRS)</option>
+                            <option value=2>Disabled</option>
+                        </select>
+                        <label>Polarity</label>
+                        <select id="outputPort3Pol">
+                            <option value="false">Normal</option>
+                            <option value="true">Inverted</option>
+                        </select>
+                    </form>
+                </div>
+                <div>
+                    <form>Output Port 4:
+                        <label>Mode</label>
+                        <select id="outputPort4Mode">
+                            <option value=0>Single (TS)</option>
+                            <option value=1>Dual (TRS)</option>
+                            <option value=2>Disabled</option>
+                        </select>
+                        <label>Polarity</label>
+                        <select id="outputPort4Pol">
+                            <option value="false">Normal</option>
+                            <option value="true">Inverted</option>
+                        </select>
+                    </form>
+                </div>
             </controlPortOpts>
+            <inputPortSel  class="paddingNorm" id="inputPortConfig">
+                <div>Input Port Configuration</div>
+                <button class="configSaveButton saveLoad">Save Configuration Data</button>
+            </inputPortSel>
+            <inputPortOpts class="paddingNorm">
+                <div>
+                    <form>Input Port 1:
+                        <label>Mode</label>
+                        <select id="inputPort1Mode">
+                            <option value=0>Single Switch (TS)</option>
+                            <option value=1>Dual Switch (TRS)</option>
+                            <option value=2>Expression Pedal (Min / Max)</option>
+                            <option value=3>Expression Pedal (Continuous)</option>
+                            <option value=4>Disabled</option>
+                        </select>
+                        <label>Polarity</label>
+                        <select id="inputPort1Pol">
+                            <option value="false">Normal</option>
+                            <option value="true">Inverted</option>
+                        </select>
+                    </form>
+                </div>
+                <div>
+                    <form>Input Port 2:
+                        <label>Mode</label>
+                        <select id="inputPort2Mode">
+                            <option value=0>Single Switch (TS)</option>
+                            <option value=1>Dual Switch (TRS)</option>
+                            <option value=2>Expression Pedal (Min / Max)</option>
+                            <option value=3>Expression Pedal (Continuous)</option>
+                            <option value=4>Disabled</option>
+                        </select>
+                        <label>Polarity</label>
+                        <select id="inputPort2Pol">
+                            <option value="false">Normal</option>
+                            <option value="true">Inverted</option>
+                        </select>
+                    </form>
+                </div>
+                <div>
+                    <form>Input Port 3:
+                        <label>Mode</label>
+                        <select id="inputPort3Mode">
+                            <option value=0>Single Switch (TS)</option>
+                            <option value=1>Dual Switch (TRS)</option>
+                            <option value=2>Expression Pedal (Min / Max)</option>
+                            <option value=3>Expression Pedal (Continuous)</option>
+                            <option value=4>Disabled</option>
+                        </select>
+                        <label>Polarity</label>
+                        <select id="inputPort3Pol">
+                            <option value="false">Normal</option>
+                            <option value="true">Inverted</option>
+                        </select>
+                    </form>
+                </div>
+                <div>
+                    <form>Input Port 4:
+                        <label>Mode</label>
+                        <select id="inputPort4Mode">
+                            <option value=0>Single Switch (TS)</option>
+                            <option value=1>Dual Switch (TRS)</option>
+                            <option value=2>Expression Pedal (Min / Max)</option>
+                            <option value=3>Expression Pedal (Continuous)</option>
+                            <option value=4>Disabled</option>
+                        </select>
+                        <label>Polarity</label>
+                        <select id="inputPort4Pol">
+                            <option value="false">Normal</option>
+                            <option value="true">Inverted</option>
+                        </select>
+                    </form>
+                </div>
+            </inputPortOpts>
+            <otherOpts class="paddingNorm">
+                Other Configuration Options
+                <div style="border: 1px solid black; padding: 3px;">Midi Passthrough
+                    <form>USB Midi to Hardware MIDI
+                        <label>Port 1</label>
+                        <select id=" ">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                        <label>Port 2</label>
+                        <select id=" ">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                        <label>Port 2</label>
+                        <select id=" ">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                        <label>Port 2</label>
+                        <select id=" ">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                    </form>
+                    <form>Hardware Midi to USB MIDI
+                        <label>Port 1</label>
+                        <select id=" ">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                        <label>Port 2</label>
+                        <select id=" ">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                        <label>Port 2</label>
+                        <select id=" ">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                        <label>Port 2</label>
+                        <select id=" ">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                    </form>
+                    <form>Hardware Midi to Hardware MIDI
+                        <label>Port 1</label>
+                        <select id=" ">
+                            <option value=0>Thru off</option>
+                            <option value=1>Pass all messages</option>
+                            <option value=2>Pass only same channel</option>
+                            <option value=4>Pass only different channel</option>
+                        </select>
+                        <label>Port 2</label>
+                        <select id=" ">
+                            <option value=0>Thru off</option>
+                            <option value=1>Pass all messages</option>
+                            <option value=2>Pass only same channel</option>
+                            <option value=4>Pass only different channel</option>
+                        </select>
+                        <label>Port 2</label>
+                        <select id=" ">
+                            <option value=0>Thru off</option>
+                            <option value=1>Pass all messages</option>
+                            <option value=2>Pass only same channel</option>
+                            <option value=4>Pass only different channel</option>
+                        </select>
+                        <label>Port 2</label>
+                        <select id=" ">
+                            <option value=0>Thru off</option>
+                            <option value=1>Pass all messages</option>
+                            <option value=2>Pass only same channel</option>
+                            <option value=4>Pass only different channel</option>
+                        </select>
+                    </form>
+                </div>
+                <div style="border: 1px solid black; padding: 3px; margin-top: 3px;">Midi Receive Channel
+                    <form>
+                        <label>Port 1</label>
+                        <select id=" " class="MIDI_ChanList">
+                        </select>
+                        <label>Port 2</label>
+                        <select id=" " class="MIDI_ChanList">
+                        </select>
+                        <label>Port 2</label>
+                        <select id=" " class="MIDI_ChanList">
+                        </select>
+                        <label>Port 2</label>
+                        <select id=" " class="MIDI_ChanList">
+                        </select>
+                    </form>
+                </div>
+                <div style="border: 1px solid black; padding: 3px; margin-top: 3px;">
+                    <form>
+                        <label>LCD backlight Brightness</label>
+                        <select id="config_LCD_Backlight">
+                        </select>
+                    </form>
+                </div>
+            </otherOpts>
             <midiCCsel class="paddingNorm">
                 Midi CC Action Trigger
                 <form>
@@ -79,7 +315,7 @@
                 </form>
             </midiCCsel>
             <midiAct class="paddingNorm">
-                
+                This feature has not been implemented. 
             </midiAct>
             <toolTip id="toolTipArea">
                 Tool tips will show up here when mousing over elements.

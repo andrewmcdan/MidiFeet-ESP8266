@@ -1,3 +1,20 @@
+// ignores most of the code
+// cSpell:ignoreRegExp /(^(?!\s*(\/\/)|(\/\*)).*[;:)}=,{])/gm
+
+// ignores any word in quotes
+// cSpell:ignoreRegExp /\"\S*\"/g
+
+//--- ignores HEX literals
+// cSpell:ignoreRegExp /0x[A-Z]+/g
+
+//--- ignores any preprocessor directive (i.e #define)
+// cSpell:ignoreRegExp /(^#.*)/gm
+
+/// words to ignore
+// cSpell:ignore pico PSRAM btn btns spec'd dbgserPrintln dbgser Println Wifi SSID ssid's
+
+/// spell check extension defaults to checking each part of camel case words as separate words.
+
 /*
 TODO:
 1. webpage data should be stored in flash with a hash of the data. When booting, check the hash of the data in flash vs the hash of the data on the Teensy's SD card.
@@ -82,20 +99,6 @@ static const char FILE_NOT_FOUND[] PROGMEM = "FileNotFound";
 
 void replyOK()
 {
-    // DBG_OUTPUT_PORT.write(0xaa);
-    // DBG_OUTPUT_PORT.write(0x55);
-    // DBG_OUTPUT_PORT.write(0xf0);
-    // DBG_OUTPUT_PORT.write(0x0f);
-
-    // DBG_OUTPUT_PORT.write(0x01);
-    // DBG_OUTPUT_PORT.write(0x02);
-    // DBG_OUTPUT_PORT.write(0x03);
-    // DBG_OUTPUT_PORT.write(0x04);
-    // DBG_OUTPUT_PORT.write(0x05);
-    // DBG_OUTPUT_PORT.write(0x06);
-
-    // DBG_OUTPUT_PORT.write(0x10);
-    // DBG_OUTPUT_PORT.write(0x11);
     server.send(200, FPSTR(TEXT_PLAIN), "");
 }
 
@@ -168,7 +171,7 @@ void handleStatus()
 
 /*
    Return the list of files in the directory specified by the "dir" query string parameter.
-   Also demonstrates the use of chuncked responses.
+   Also demonstrates the use of chunked responses.
 */
 void handleFileList()
 {
@@ -759,7 +762,7 @@ void handleNotFound()
 }
 
 /*
-   This specific handler returns the index.htm (or a gzipped version) from the /edit folder.
+   This specific handler returns the index.htm (or a g-zipped version) from the /edit folder.
    If the file is not present but the flag INCLUDE_FALLBACK_INDEX_HTM has been set, falls back to the version
    embedded in the program code.
    Otherwise, fails with a 404 page with debug information
@@ -784,7 +787,6 @@ bool handleSceneRequest()
 }
 
 void streamSceneFromTeensyToServer(int num){ // Request a scene from the teensy and stream the data to the server.
-    ////////  NON FUCNTIONAL!!! NEEDS WORK.    
     server.chunkedResponseModeStart(200,"text/html");
     unsigned long size = 0;
     uint8_t err=0;
@@ -1054,6 +1056,129 @@ void handleNumberOfScenesRequest(){
     replyOKWithMsg("Error:" + String(err));
 }
 
+void handlePrefsRequest(){
+
+    
+    // int numberOfArgs = server.args();
+    // String argOne = server.arg(0);
+    // String argOneName = server.argName(0);
+    // streamSceneFromTeensyToServer(argOne.toInt());
+    // return false;
+    server.chunkedResponseModeStart(200,"text/html");
+    unsigned long size = 0;
+    uint8_t err=0;
+    uint8_t msg[4];
+    // uint16_t sceneNumberReq = num;
+    // msg[0] = sceneNumberReq & 0xff;
+    // msg[1] = (sceneNumberReq>>8) & 0xff;
+    // msg[2] = 0x55;
+    // msg[3] = 0x55;
+    uint8_t command = 0x00;
+    // server.sendContent("command: " + String(command,HEX) +"\n");
+    // server.sendContent("msg: " + String(msg[0],HEX)+String(msg[1],HEX)+String(msg[2],HEX)+String(msg[3],HEX) +"\n");
+    sendDataToTeensy(ESP_SERIAL_COMMANDS_Message::RequestForPreferences|ESP_SERIAL_COMMANDS_Message::isMessageNotPacket);
+    server.sendContent("sent request to teensy\n");
+    size_t count = 0;
+    // while((Serial.available()==0)&&(count<2500)){
+    //     count++;
+    //     delay(1);
+    // }
+    if(count!=0){
+        err++;
+        // server.sendContent("Timeout while waiting for data.\n");
+        // server.sendContent("err: " + String(err,HEX) + "\n");
+    }
+    else{
+        uint8_t pSizeAndErr[] = {255,255};
+        // server.sendContent("read from teensy (1)\n");
+        getTeensySerialData(pSizeAndErr);
+        // server.sendContent("read from teensy (1) complete\n");
+        command = ESP_ShortMessage.StartSequence_8 & 0x0f;
+        if(command!=ESP_SERIAL_DataType::FileSize || pSizeAndErr[1]>0){
+            err+=8;
+            // server.sendContent("Error in getting data.\n");
+            // server.sendContent("pSizeAndErr[1]: " + String(pSizeAndErr[1],HEX) + "\n");
+            return;
+        }
+        size += ESP_ShortMessage.data[0] << 0;
+        size += ESP_ShortMessage.data[1] << 8;
+        size += ESP_ShortMessage.data[2] << 16;
+        size += ESP_ShortMessage.data[3] << 24;
+        command = ESP_SERIAL_COMMANDS_Message::OkToStartSendingData|ESP_SERIAL_COMMANDS_Message::isMessageNotPacket;
+        sendDataToTeensy(command,msg,4,false);
+        count = 0;
+        // while((Serial.available()==0)&&(count<2500)){
+        //     count++;
+        //     delay(1);
+        // }
+        if(count!=0){
+            err++;
+            // server.sendContent("Timeout2 while waiting for data.\n");
+            // server.sendContent("err: " + String(err,HEX) + "\n");
+        }
+        else{
+            getTeensySerialData(pSizeAndErr);
+            // uint16_t newCommand = ESP_SerPacket.startSequence_32&0xffff;
+            bool isFullPacket = pSizeAndErr[0]==24;
+            bool noErrors = pSizeAndErr[1]==0;
+            uint8_t startSend = (ESP_SERIAL_COMMANDS_Packet::StartSendData|ESP_SERIAL_COMMANDS_Packet::SavePreferences);
+            uint8_t continueSend = (ESP_SERIAL_COMMANDS_Packet::ContinueSendData|ESP_SERIAL_COMMANDS_Packet::SavePreferences);
+            bool maskedCommandIsContSend = true;
+            if(ESP_SerPacket[2]==startSend){
+                // server.sendContent("rec'd start send command.\n");
+                char anArray[16];
+                for(uint8_t i=0;i<16;i++){
+                    anArray[i] = ESP_SerPacket.data[i];
+                }
+                server.sendContent(anArray,16);
+                while(isFullPacket && noErrors && maskedCommandIsContSend){
+                    // server.sendContent("while Loop1.\n");
+                    sendDataToTeensy((ESP_SERIAL_COMMANDS_Message::OkToContinueSendingData|ESP_SERIAL_COMMANDS_Message::isMessageNotPacket),msg,4,false);
+                    count = 0;
+                    // while((Serial.available()==0)&&(count<2500)){
+                    //     count++;
+                    //     delay(1);
+                    // }
+                    if(count!=0){
+                        err++;
+                        // server.sendContent("Timeout1 while waiting for data.\n");
+                        // server.sendContent("err: " + String(err,HEX) + "\n");
+                    }
+                    getTeensySerialData(pSizeAndErr);
+                    // newCommand = ESP_SerPacket.startSequence_32&0xffff;
+                    isFullPacket = (pSizeAndErr[0]==24);
+                    noErrors = (pSizeAndErr[1]==0);
+                    maskedCommandIsContSend = (ESP_SerPacket[2] == continueSend);
+                    if(maskedCommandIsContSend){
+                        // anArray[16];
+                        for(uint8_t i=0;i<16;i++){
+                            anArray[i] = ESP_SerPacket.data[i];
+                        }
+                        server.sendContent(anArray,16);
+                    }else if(ESP_SerPacket[2]==(ESP_SERIAL_COMMANDS_Packet::EndSendData|ESP_SERIAL_COMMANDS_Packet::SavePreferences)){
+                        // anArray[16];
+                        if(ESP_SerPacket.data[0]!=0){ // only send if there is data to send.
+                            size_t counter = 0;
+                            while(ESP_SerPacket.data[counter]!=0){
+                                anArray[counter]=ESP_SerPacket.data[counter];
+                                counter++;
+                            }
+                            char smallArr[counter];
+                            for(uint8_t i=0;i<counter;i++){
+                                smallArr[i]=anArray[i];
+                            }
+                            server.sendContent(smallArr,counter);
+                        }
+                    }else err+=32;
+                }
+            }
+        }
+    }
+    server.chunkedResponseFinalize();
+    server.sendContent(String());
+
+}
+
 bool connectedToTeensy = false;
 bool hashFilesSent = false;
 void setup(void)
@@ -1124,12 +1249,6 @@ void setup(void)
     if (MDNS.begin(host))
     {
         MDNS.addService("http", "tcp", 80);
-        if (DBG_OUT_EN)
-        {
-            DBG_OUTPUT_PORT.print(F("Open http://"));
-            DBG_OUTPUT_PORT.print(host);
-            DBG_OUTPUT_PORT.println(F(".local/edit to open the FileSystem Browser"));
-        }
     }
 
     ////////////////////////////////
@@ -1161,6 +1280,8 @@ void setup(void)
 
     server.on("/numScenes", HTTP_GET, handleNumberOfScenesRequest);
 
+    server.on("/prefs", HTTP_GET, handlePrefsRequest);
+
     // Default handler for all URIs not defined above
     // Use it to read files from filesystem
     server.onNotFound(handleNotFound);
@@ -1174,107 +1295,7 @@ void setup(void)
 }
 
 void loop(void)
-{/*
-
-    if(Serial.available()&&false){
-        char inChar = Serial.read();
-        if(inChar=='A'){
-            // wait until 0xaa is sent
-            // send magic bytes
-
-            uint32_t crc;
-            uint8_t msg[] = {0x00,0x55,0xaa,0x55,0xaa};
-            crc = crc32Buffer(msg,5);
-            uint8_t my_crc8 = uint8_t(crc);
-            Serial.write(msg,5);
-            Serial.write(my_crc8);
-
-            for(uint8_t i = 0; i < 5; i++)msg[i] = i;
-
-            crc = crc32Buffer(msg,5);
-            my_crc8 = uint8_t(crc);
-            Serial.write(msg,5);
-            Serial.write(my_crc8);
-
-            for(uint8_t i = 0; i < 5; i++)msg[i] = i+0xf0;
-
-            crc = crc32Buffer(msg,5);
-            my_crc8 = uint8_t(crc);
-            Serial.write(msg,5);
-            Serial.write(my_crc8);
-
-            connectedToTeensy = true;
-        }
-        if(inChar=='B'){
-            // wait until 0xaa is sent
-            // send magic bytes
-
-            uint32_t crc;
-            uint8_t msg[20];
-            msg[0]=0xaa;
-            for(uint8_t i = 1; i < 20; i++)msg[i] = i;
-            crc = crc32Buffer(msg,20);
-            Serial.write(msg,20);
-            Serial.write(crc);
-            Serial.write(crc>>8);
-            Serial.write(crc>>16);
-            Serial.write(crc>>24);
-            connectedToTeensy = true;
-        }
-    }
-    if(connectedToTeensy && hashFilesSent){
-        /////////////////////////////////
-        // file hash checks
-        Dir hashDir = fileSystem->openDir("/hash");
-        while (hashDir.next())
-        {
-            String fileName = hashDir.fileName();
-            uint64_t fileSize = hashDir.fileSize();
-            File hashFile = hashDir.openFile("r");
-            Serial.write(0x00);
-            Serial.write(0b10101010);
-            Serial.write(0b01010101);
-            Serial.write(0x01);
-            Serial.write(fileName.length());
-            Serial.println(fileName);
-
-            byte fileSizeBytes[8] = {
-                fileSize & 0x00000000000000ff,
-                (fileSize & 0x000000000000ff00) >> 8,
-                (fileSize & 0x0000000000ff0000) >> 16,
-                (fileSize & 0x00000000ff000000) >> 24,
-                (fileSize & 0x000000ff00000000) >> 32,
-                (fileSize & 0x0000ff0000000000) >> 40,
-                (fileSize & 0x00ff000000000000) >> 48,
-                (fileSize & 0xff00000000000000) >> 56};
-            Serial.write(0x00);
-            Serial.write(0b10101010);
-            Serial.write(0b01010101);
-            Serial.write(0x02);
-            for (int i = 0; i < 8; i++)
-            {
-                Serial.write(fileSizeBytes[i]);
-            }
-            Serial.write(0x00);
-            Serial.write(0b10101010);
-            Serial.write(0b01010101);
-            Serial.write(0x03);
-            while (hashFile.available())
-            {
-                Serial.write(hashFile.read());
-            }
-            Serial.write(0x00);
-            Serial.write(0b10101010);
-            Serial.write(0b01010101);
-            Serial.write(0x04);
-        }
-        hashFilesSent = true;
-    }
-    
-*/
+{
     server.handleClient();
     MDNS.update();
-    // Serial.print("Serial.availableForWrite(): "); // 106 byte buffer
-    // Serial.println(Serial.availableForWrite());
-    // delay(1000);
 }

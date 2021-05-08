@@ -1,5 +1,34 @@
+// cSpell:disable
 var maxNumberOfScenes;
-const actionNamesArr = ["Send Note On", "Send Note Off", "MIDI CC, absolute value", "MIDI CC, Inrement (127)", "MIDI CC, Decrement (0)", "MIDI CC, Inrement (64)", "MIDI CC, Decrement (63)", "MIDI CC, Inrement (97)", "MIDI CC, Decrement (96)","Send Program Change", "Next Scene", "Previous Scene", "Turn on output port", "Turn off output port", "Toggle output port", "Pulse output port", "Wait (delay)", "Jump to scene", "Set external expression pedal update interval"];
+var midiManglerEnabled = false;
+const actionNamesArr = [
+    "Send Note On", 
+    "Send Note Off", 
+    "MIDI CC, absolute value", 
+    "MIDI CC, Increment (127)", 
+    "MIDI CC, Decrement (0)", 
+    "MIDI CC, Increment (64)", 
+    "MIDI CC, Decrement (63)", 
+    "MIDI CC, Increment (97)", 
+    "MIDI CC, Decrement (96)","Send Program Change", 
+    "Next Scene", 
+    "Previous Scene", 
+    "Turn on output port", 
+    "Turn off output port", 
+    "Toggle output port", 
+    "Pulse output port", 
+    "Wait (delay)", 
+    "Jump to scene", 
+    "Set external expression pedal update interval",
+    "Send a Play message",
+    "Send a Stop message",
+    "Send a Continue message",
+    "Seek to beginning",
+    "Send a custom MIDI message (advanced)",
+    "MIDI Mangler - Start a function output",
+    "MIDI Mangler - Stop a function output",
+    "MIDI Mangler - Function one shot"
+];
 const actionToolTipsArrObj = {
     0: "Sends a note off event. Select Midi output port, channel, note number, and velocity value.",
     1: "Sends a note on event. Select Midi output port, channel, note number, and velocity value.",
@@ -16,11 +45,29 @@ const actionToolTipsArrObj = {
     12: "Turns on (closes) the selected control output. <br><br>Each control port is capable of connecting gear that accepts TS or TRS cables. (i.e. single footswitch or dual footswitch ports.) Each port can also be connected to two (2) TS / single footswitch ports using a TRS to dual TS cable. But be careful of ground loops!",
     13: "Turns off (opens) the selected control output. <br><br>Each control port is capable of connecting gear that accepts TS or TRS cables. (i.e. single footswitch or dual footswitch ports.) Each port can also be connected to two (2) TS / single footswitch ports using a TRS to dual TS cable. But be careful of ground loops!",
     14: "Toggles the selected control output. <br><br>Each control port is capable of connecting gear that accepts TS or TRS cables. (i.e. single footswitch or dual footswitch ports.) Each port can also be connected to two (2) TS / single footswitch ports using a TRS to dual TS cable. But be careful of ground loops!",
-    15: "Pulses the selected control output. If the output was on (closed), it will turn off (opens) for the selected pulse time. If it was off (open), it turn on (closes) for the pulse time. <br><br>Each control port is capable of connecting gear that accepts TS or TRS cables. (i.e. single footswitch or dual footswitch ports.) Each port can also be connected to two (2) TS / single footswitch ports using a TRS to dual TS cable. But be careful of ground loops!",
-    16: "Wait for a period time before executing next action. Multiple \"wait\" actions can exist in a chain but only one can start at the start of the first action.",
+    15: "Pulses the selected control output. If the output was on (closed), it will turn off (opens) for the selected pulse time. If it was off (open), it turn on (closes) for the pulse time. <br><br>CAUTION! The next action listed will not wait for the pulse to complete. Once the pulse has begun, the next action will start. Use a \"wait\" action with a similar time to delay moving on to the next action.<br><br>Each control port is capable of connecting gear that accepts TS or TRS cables. (i.e. single footswitch or dual footswitch ports.) Each port can also be connected to two (2) TS / single footswitch ports using a TRS to dual TS cable. But be careful of ground loops!",
+    16: "Wait for a period time before executing next action. A \"wait\" actions will start its timer once it is called. The next action will be called even if the scene gets changed prior to the expiry of the \"wait\" timer.",
     17: "Jumps to the selected scene. Actions listed after this will still execute.",
     18: "Sets the update interval for monitoring external expression pedals and foot pedals.<br><br>If this value is set too low, (i.e. updating too fast) there is the potential that latency will be added to forwarding of Midi messages for any port with Midi thru enabled. <br>If this occurs, try increasing this number. If that results in too much latency while operating external pedals, perhaps you are over-taxing the hardware.",
+    19: "Send a Play message over the selected MIDI out port. This is a channel agnostic message and will be received by any device connected to the out port.",
+    20: "Send a Stop message over the selected MIDI out port. This is a channel agnostic message and will be received by any device connected to the out port.",
+    21: "Send a Continue message over the selected MIDI out port. This is a channel agnostic message and will be received by any device connected to the out port.",
+    22: "Seek to beginning of song. This is a channel agnostic message and will be received by any device connected to the out port.",
+    23: "Send a custom MIDI message. This is advanced functionality that allows you to send any bytes you want over the MIDI port.",
+    // Midi Mangler has not been implemented
+    24: "MIDI Mangler - start function output",
+    25: "MIDI Mangler - Stop function output",
+    26: "MIDI Mangler - function one shot",
+    27: "",
+    38: "",
     255: "Action terminator. This indicates that the action chain is complete."
+};
+const configToolTipsArrObj = {
+    "outputPortConfig": "Configure the output ports. Each port has global settings that apply regardless of the selected scene.",
+    "inputPortConfig": "Configure the input ports. Each port has global settings that apply regardless of the selected scene.",
+    0: "Output port mode:<br><br>Each output port can set to one of two modes (or disabled).<br><br>Single Mode: use a TS cable to connect to devices that receive single footswitch input.<br><br>Dual Mode: use a TRS cable to connect to devices that receive dual footswtich input.",
+    1: "Input port mode:<br><br>Each input port can set to one of four modes (or disabled).<br><br>Single Switch Mode: use a TS cable to connect to single footswitch.<br><br>Dual Switch Mode: use a TRS cable to connect to a dual footswtich.<br><br>Expression Pedal Min/Max: Connect an expression pedal with a TRS cable. Actions will only execute when the pedal is placed in its minumum or maximum positions.<br><br>Expression Pedal Continuous: Connect an expression pedal with a TRS cable. Action will execute any time the pedal position changes and some associated actions can send the pedal position as data.",
+    2: "Port polarity:<br><br>If the connected device does not behave as expected, try enabling polarity inversion."
 };
 const originLocation = location.href;
 const sceneNumberInput = document.getElementById("sceneNumberInputField");
@@ -79,6 +126,28 @@ function OutPortsObject() {
     }
 }
 
+let prefsObj = {};
+prefsObj.usbToMidi = [true,true,true,true];
+prefsObj.midiToUsb = [true,true,true,true];
+prefsObj.midiToMidi = [0,0,0,0];
+prefsObj.midiChannel = [1,1,1,1];
+prefsObj.LCDbrightness = 255;
+prefsObj.arrowPositionsText = {0:"Top Right, Bottom Right", 1:"Top Left, Bottom Right", 2:"Top Right, Bottom Left", 3:"Top Left, Bottom Left"};
+prefsObj.arrowPositions = 0;
+prefsObj.totalNumberOfScenes = 250;
+prefsObj.LCDupdateInterval = 350; // time in ms
+prefsObj.expressionPedalUpdateInterval = 10;
+prefsObj.outPorts = {};
+prefsObj.outPorts.modesText = {0:"Single Switch (TS)", 1:"Dual Switch (TRS)", 2:"Disabled", 255:"Disabled"};
+prefsObj.outPorts.mode = [0,0,0,0];
+prefsObj.outPorts.polarityInv = [false,false,false,false];
+prefsObj.inPorts = {};
+prefsObj.inPorts.modesText = {0:"Single Switch (TS)", 1:"Dual Switch (TRS)", 2:"Expression Pedal - Min / Max", 3:"Expression Pedal - Continuous", 255:"Disabled"};
+prefsObj.inPorts.mode = [0,0,0,0];
+prefsObj.inPorts.polarityInv = [false,false,false,false];
+
+console.log(prefsObj);
+
 let currentSceneData = {};
 currentSceneData.mainButtons = new Array();
 for (let i = 0; i < 10; i++) currentSceneData.mainButtons.push(new MainButtonObject());
@@ -94,7 +163,7 @@ currentSceneData.resetValues = () => {
 console.log(currentSceneData);
 
 mainBtnNumSelect.addEventListener('change', () => {
-    // rewrite displayed acitons
+    // rewrite displayed actions
     updateMainButtonActions(mainBtnNumSelect.value - 1);
 });
 
@@ -132,10 +201,7 @@ function updateMaxNumberOfScenes() {
         });
     }
 }
-
-
-
-// loads scenedata from controller, sceneNumber is 0 indexed
+// loads scene data from controller, sceneNumber is 0 indexed
 function loadSceneData(sceneNumber, cb, ...cbParams) {
     httpGet(originLocation + "loadScene?num=" + sceneNumber, (res) => {
         loadResponseIntoSceneData(res);
@@ -145,13 +211,449 @@ function loadSceneData(sceneNumber, cb, ...cbParams) {
     })
 }
 
+(function loadPrefs(){
+    httpGet(originLocation + "prefs", (res) =>{
+        let iterator = 0;
+        let line = 0;
+        while (res[iterator] != undefined) {
+            let readChar = res[iterator++];
+            if (readChar == '\r') {
+                // do nothing, skip carriage return
+            } else if (readChar == '\n' || readChar == '/') { // new line or reached comment
+                line++;
+            } else {
+                switch (line) {
+                case 0: { // MIDI to USB passthrough setting
+                    for (let i = 0; i < 4; i++) {
+                        while (readChar != ',' && readChar != '/') {
+                            if (readChar == 't') {
+                                prefsObj.midiToUsb[i] = true;
+                            } else if (readChar == 'f') {
+                                prefsObj.midiToUsb[i] = false;
+                            } else {
+                                // sdCardFile.close();
+                                return false;
+                            }
+                            readChar = res[iterator++];
+                        }
+                        readChar = res[iterator++];
+                    }
+                    while (readChar != '\n' && res[iterator] != undefined)
+                        readChar = res[iterator++]; // read through comment if present
+                    break;
+                }
+                case 1: { // USB to MIDI passthrough setting
+                    for (let i = 0; i < 4; i++) {
+                        while (readChar != ',' && readChar != '/') {
+                            if (readChar == 't') {
+                                prefsObj.usbToMidi[i] = true;
+                            } else if (readChar == 'f') {
+                                prefsObj.usbToMidi[i] = false;
+                            } else {
+                                // sdCardFile.close();
+                                return false;
+                            }
+                            readChar = res[iterator++];
+                        }
+                        readChar = res[iterator++];
+                    }
+                    while (readChar != '\n' && res[iterator] != undefined)
+                        readChar = res[iterator++]; // read through comment if present
+                    break;
+                }
+                case 2: { // MIDI to MIDI passthrough setting
+                    for (let i = 0; i < 4; i++) {
+                        while (readChar != ',' && readChar != '/') {
+                            prefsObj.midiToMidi[i] = parseInt(readChar);
+                            readChar = res[iterator++];
+                        }
+                        readChar = res[iterator++];
+                    }
+                    while (readChar != '\n' && res[iterator] != undefined)
+                        readChar = res[iterator++]; // read through comment if present
+                    break;
+                }
+                case 3: { // LCD backlight brightness
+                    let intBuf = "";
+                    while (readChar != '/' && readChar != '\n') {
+                        intBuf += readChar;
+                        readChar = res[iterator++];
+                    }
+                    prefsObj.LCDbrightness = parseInt(intBuf);
+                    while (readChar != '\n' && res[iterator] != undefined)
+                        readChar = res[iterator++]; // read through comment if present
+                    break;
+                }
+                case 4: { // Hardware midi port channel setting
+                    // Used for thru filtering when thru settings is midi::Thru::SameChannel or midi::Thru::DifferentChannel
+                    // Sets channel for selected port. 
+                    for (let i = 0; i < 4; i++) {
+                        let temp = "";
+                        while (readChar != ',' && readChar != '/') {
+                            temp += readChar;
+                            readChar = res[iterator++];
+                        }
+                        prefsObj.midiChannel[i] = parseInt(temp);
+                        readChar = res[iterator++];
+                    }
+                    while (readChar != '\n' && res[iterator] != undefined)
+                        readChar = res[iterator++]; // read through comment if present
+                    break;
+                }
+                case 5: { // arrow positions
+                    let intBuf = "";
+                    while (readChar != '/' && readChar != '\n') {
+                        intBuf += readChar;
+                        readChar = res[iterator++];
+                    }
+                    prefsObj.arrowPositions = parseInt(intBuf);
+                    while (readChar != '\n' && res[iterator] != undefined)
+                        readChar = res[iterator++]; // read through comment if present
+                    break;
+                }
+                case 6: { // Number of scenes 
+                    let intBuf = "";
+                    while (readChar != '/' && readChar != '\n') {
+                        intBuf += readChar;
+                        readChar = res[iterator++];
+                    }
+                    let num = parseInt(intBuf);
+                    prefsObj.totalNumberOfScenes = num <= 1500 ? num : 1500;
+                    while (readChar != '\n' && res[iterator] != undefined)
+                        readChar = res[iterator++]; // read through comment if present
+                    break;
+                }
+                case 7: { // LCD update time
+                    let intBuf = "";
+                    while (readChar != '/' && readChar != '\n') {
+                        intBuf += readChar;
+                        readChar = res[iterator++];
+                    }
+                    prefsObj.LCDupdateInterval = parseInt(intBuf);
+                    while (readChar != '\n' && res[iterator] != undefined)
+                        readChar = res[iterator++]; // read through comment if present
+                    break;
+                }
+                case 8: { // Output port modes
+                    for (let i = 0; i < 4; i++) {
+                        let temp = "";
+                        while (readChar != ',' && readChar != '/') {
+                            temp += readChar;
+                            readChar = res[iterator++];
+                        }
+                        prefsObj.outPorts.mode[i] = parseInt(temp);
+                        readChar = res[iterator++];
+                    }
+                    while (readChar != '\n' && res[iterator] != undefined)
+                        readChar = res[iterator++]; // read through comment if present
+                    break;
+                }
+                case 9: { // Output port polarity inversoin
+                    for (let i = 0; i < 4; i++) {
+                        while (readChar != ',' && readChar != '/') {
+                            if (readChar == 't') {
+                                prefsObj.outPorts.polarityInv[i] = true;
+                            } else if (readChar == 'f') {
+                                prefsObj.outPorts.polarityInv[i] = false;
+                            } else {
+                                // sdCardFile.close();
+                                return false;
+                            }
+                            readChar = res[iterator++];
+                        }
+                        readChar = res[iterator++];
+                    }
+                    while (readChar != '\n' && res[iterator] != undefined)
+                        readChar = res[iterator++]; // read through comment if present
+                    break;
+                }
+                case 10: { // Input port modes
+                    for (let i = 0; i < 4; i++) {
+                        let temp = "";
+                        while (readChar != ',' && readChar != '/') {
+                            temp += readChar;
+                            readChar = res[iterator++];
+                        }
+                        prefsObj.inPorts.mode[i] = parseInt(temp);
+                        readChar = res[iterator++];
+                    }
+                    while (readChar != '\n' && res[iterator] != undefined)
+                        readChar = res[iterator++]; // read through comment if present
+                    break;
+                }
+                case 11: { // Input port polarity inverison
+                    for (let i = 0; i < 4; i++) {
+                        while (readChar != ',' && readChar != '/') {
+                            if (readChar == 't') {
+                                prefsObj.inPorts.polarityInv[i] = true;
+                            } else if (readChar == 'f') {
+                                prefsObj.inPorts.polarityInv[i] = false;
+                            } else {
+                                // sdCardFile.close();
+                                return false;
+                            }
+                            readChar = res[iterator++];
+                        }
+                        readChar = res[iterator++];
+                    }
+                    while (readChar != '\n' && res[iterator] != undefined)
+                        readChar = res[iterator++]; // read through comment if present
+                    break;
+                }
+                case 12: { // unused
+                    
+                    break;
+                }
+                }
+                line++;
+            }
+        }
+        console.log(prefsObj);
+        setConfigElementsByPrefs();
+    })
+})()
+
+function setConfigElementsByPrefs(){
+    for(let i = 1; i <= 4; i++){
+        // console.log("ports #" + i); //////////////////////////////////////////////////
+        let el = document.getElementById("outputPort" + i + "Mode");
+        let optSel = parseInt(prefsObj.outPorts.mode[i-1]);
+        if(optSel>2){
+            optSel = 2;
+        }
+        // console.log(optSel); //////////////////////////////////////////////////
+        el.options[optSel].selected = true;
+        el.addEventListener('change',updatePrefsObjFromEls);
+        el = document.getElementById("outputPort" + i + "Pol");
+        optSel = prefsObj.outPorts.polarityInv[i-1];
+        // console.log(optSel); //////////////////////////////////////////////////
+        if(optSel == true || optSel == "true"){
+            optSel = 1;
+        }else{
+            optSel = 0;
+        }
+        // console.log(optSel); //////////////////////////////////////////////////
+        el.options[optSel].selected = true;
+        el.addEventListener('change',updatePrefsObjFromEls);
+        el = document.getElementById("inputPort" + i + "Mode");
+        optSel = parseInt(prefsObj.outPorts.mode[i-1]);
+        // console.log(optSel); //////////////////////////////////////////////////
+        if(optSel>2){
+            optSel = 2;
+        }
+        // console.log(optSel); //////////////////////////////////////////////////
+        el.options[optSel].selected = true;
+        el.addEventListener('change',updatePrefsObjFromEls);
+        el = document.getElementById("inputPort" + i + "Pol");
+        optSel = prefsObj.inPorts.polarityInv[i-1];
+        // console.log(optSel); //////////////////////////////////////////////////
+        if(optSel == true || optSel == "true"){
+            optSel = 1;
+        }else{
+            optSel = 0;
+        }
+        // console.log(optSel); //////////////////////////////////////////////////
+        el.options[optSel].selected = true;
+        el.addEventListener('change',updatePrefsObjFromEls);
+    }
+    for(let i = 25; i > 0; i--){
+        let newOpt = document.createElement("option");
+        newOpt.innerHTML = i==25?"25 (MAX)":i;
+        // console.log(prefsObj.LCDbrightness);
+        if(prefsObj.LCDbrightness == (i * 10)) newOpt.selected = true;
+        document.getElementById("config_LCD_Backlight").appendChild(newOpt);
+        document.getElementById("config_LCD_Backlight").addEventListener('change',updatePrefsObjFromEls);
+    }
+
+    let chanLists = document.getElementsByClassName("MIDI_ChanList");
+    let iterator = 0;
+    for(sel of chanLists){
+        for(let i = 0; i < 17; i++){
+            let newOpt = document.createElement("option");
+            newOpt.innerHTML = i==0?"Omni":i;
+            if(prefsObj.midiChannel[iterator] == i)newOpt.selected = true;
+            sel.appendChild(newOpt);
+            sel.addEventListener('change',updatePrefsObjFromEls);
+        }
+        iterator++;
+    }
+
+    let saveConfigButtons = document.getElementsByClassName("configSaveButton");
+    for(el of saveConfigButtons){
+        el.addEventListener('click',savePrefs);
+    }
+}
+
+function updatePrefsObjFromEls(event){
+    let el = event.path[0];
+    let value = event.target.value;
+    switch(el.id){
+        case "outputPort1Mode":
+        {
+            prefsObj.outPorts.mode[0] = parseInt(value);
+            break;
+        }
+        case "outputPort2Mode":
+        {
+            prefsObj.outPorts.mode[1] = parseInt(value);
+            break;
+        }
+        case "outputPort3Mode":
+        {
+            prefsObj.outPorts.mode[2] = parseInt(value);
+            break;
+        }
+        case "outputPort4Mode":
+        {
+            prefsObj.outPorts.mode[3] = parseInt(value);
+            break;
+        }
+        case "outputPort1Pol":
+        {
+            if(value == true || value == "true")
+                prefsObj.outPorts.polarityInv[0] = true;
+            else prefsObj.outPorts.polarityInv[0] = false;
+            break;
+        }
+        case "outputPort2Pol":
+        {
+            if(value == true || value == "true")
+                prefsObj.outPorts.polarityInv[1] = true;
+            else prefsObj.outPorts.polarityInv[1] = false;
+            break;
+        }
+        case "outputPort3Pol":
+        {
+            if(value == true || value == "true")
+                prefsObj.outPorts.polarityInv[2] = true;
+            else prefsObj.outPorts.polarityInv[2] = false;
+            break;
+        }
+        case "outputPort4Pol":
+        {
+            if(value == true || value == "true")
+                prefsObj.outPorts.polarityInv[3] = true;
+            else prefsObj.outPorts.polarityInv[3] = false;
+            break;
+        }
+        case "inputPort1Mode":
+        {
+            prefsObj.inPorts.mode[0] = parseInt(value);
+            break;
+        }
+        case "inputPort2Mode":
+        {
+            prefsObj.inPorts.mode[1] = parseInt(value);
+            break;
+        }
+        case "inputPort3Mode":
+        {
+            prefsObj.inPorts.mode[2] = parseInt(value);
+            break;
+        }
+        case "inputPort4Mode":
+        {
+            prefsObj.inPorts.mode[3] = parseInt(value);
+            break;
+        }
+        case "inputPort1Pol":
+        {
+            if(value == true || value == "true")
+                prefsObj.inPorts.polarityInv[0] = true;
+            else prefsObj.inPorts.polarityInv[0] = false;
+            break;
+        }
+        case "inputPort2Pol":
+        {
+            if(value == true || value == "true")
+                prefsObj.inPorts.polarityInv[1] = true;
+            else prefsObj.inPorts.polarityInv[1] = false;
+            break;
+        }
+        case "inputPort3Pol":
+        {
+            if(value == true || value == "true")
+                prefsObj.inPorts.polarityInv[2] = true;
+            else prefsObj.inPorts.polarityInv[2] = false;
+            break;
+        }
+        case "inputPort4Pol":
+        {
+            if(value == true || value == "true")
+                prefsObj.inPorts.polarityInv[3] = true;
+            else prefsObj.inPorts.polarityInv[3] = false;
+            break;
+        }
+        default:
+            break;
+    }
+    console.log(prefsObj);
+}
+
+function savePrefs(){
+    // console.log("clicked");
+    // Serialize prefs data
+    let outData = "";
+    for(let i = 0; i < 4; i++){
+        if(prefsObj.midiToUsb[i]) outData += "t";
+        else outData += "f";
+        outData += i!=3?",":"/";
+    }
+    outData += "\tMIDItoUSB\n";
+    for(let i = 0; i < 4; i++){
+        if(prefsObj.usbToMidi[i]) outData += "t";
+        else outData += "f";
+        outData += i!=3?",":"/";
+    }
+    outData += "\tUSBtoMIDI\n";
+    for(let i = 0; i < 4; i++){
+        outData += parseInt(prefsObj.midiToMidi[i]);
+        outData += i!=3?",":"/";
+    }
+    outData += "\tMIDItoMIDI with filer channel\n";
+    outData += parseInt(prefsObj.LCDbrightness) + "/\t\tbacklight brightness\n";
+    for(let i = 0; i < 4; i++){
+        outData += parseInt(prefsObj.midiChannel[i]);
+        outData += i!=3?",":"/";
+    }
+    outData += "\tMIDI channel\n";
+    outData += parseInt(prefsObj.arrowPositions) + "/\t\t\tArrow positions\n";
+    outData += parseInt(prefsObj.totalNumberOfScenes) + "/\t\tNumber of scenes\n";
+    outData += parseInt(prefsObj.LCDupdateInterval) + "/\t\tLCD scroll text update timne in milliseconds\n";
+    for(let i = 0; i < 4; i++){
+        outData += parseInt(prefsObj.outPorts.mode[i]);
+        outData += i!=3?",":"/";
+    }
+    outData += "\tOutput Port Modes\n";
+    for(let i = 0; i < 4; i++){
+        if(prefsObj.outPorts.polarityInv[i]) outData += "t";
+        else outData += "f";
+        outData += i!=3?",":"/";
+    }
+    outData += "\tOutput port polarity inversion\n";
+    for(let i = 0; i < 4; i++){
+        outData += parseInt(prefsObj.inPorts.mode[i]);
+        outData += i!=3?",":"/";
+    }
+    outData += "\tInput Port Modes\n";
+    for(let i = 0; i < 4; i++){
+        if(prefsObj.inPorts.polarityInv[i]) outData += "t";
+        else outData += "f";
+        outData += i!=3?",":"/";
+    }
+    outData += "\tInput port polarity inversion\n";
+    outData += '\n';
+    console.log(outData);
+    //@todo save prefs to teensy SD
+}
+
 actionCount = 0;
 class InsertActionDropDown {
     constructor(actionObj, classAndIdPrefix) {
         this.action = actionObj;
 
         this.form = '<form id="' + classAndIdPrefix + actionCount + 'form" class="' + classAndIdPrefix + 'FormClass"><label>Action: </label><select class="' + classAndIdPrefix + '_actionDropDown actionDropDown" id="' + classAndIdPrefix + actionCount + '">';
-        for (let i = 0; i < 19; i++) {
+        for (let i = 0; i < 27; i++) {
             this.form += '<option value="' + i + '"';
             this.form += this.action.action == i ? 'selected="selected"' : ' ';
             this.form += '>' + actionNamesArr[i] + '</option>';
@@ -165,15 +667,17 @@ class InsertActionDropDown {
         // this array indicates whether an option dropdown should be displayed for each type of action.
         // Actions can have up to 6 options in this configuration, but current the most and action has is 4.
         let optionsEnabled = [
-            ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "12", "13", "14", "15", "16", "17", "18"],
-            ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "12", "13", "14", "15", "16"],
-            ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "15", "16"],
-            ["0", "1", "2"],
-            [],
-            []
+            ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26"],
+            ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "12", "13", "14", "15", "16", "23", "x24", "x25", "x26"],
+            ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "15", "16", "23", "x24", "x25", "x26"],
+            ["0", "1", "2","23", "x24", "x25", "x26"],
+            ["x24", "x25", "x26"],
+            ["x24", "x25", "x26"]
         ];
         for (let i = 0; i < 6; i++)
             if (optionsEnabled[i].includes(this.action.action))
+                this.form += '<label class="actionOptionLabel" id="' + classAndIdPrefix + actionCount + 'option' + i + 'label" ></label><select class="actionOptionSelect" id="' + classAndIdPrefix + actionCount + 'option' + i + 'select" ></select>';
+            else if (optionsEnabled[i].includes("x"+this.action.action) && midiManglerEnabled)
                 this.form += '<label class="actionOptionLabel" id="' + classAndIdPrefix + actionCount + 'option' + i + 'label" ></label><select class="actionOptionSelect" id="' + classAndIdPrefix + actionCount + 'option' + i + 'select" ></select>';
         this.form += '</form>';
         actionCount++;
@@ -323,11 +827,11 @@ function updateMainButtonActions(buttonNumber) {
         setupActionOptions(element, ind, buttonNumber, "mainBtnAction", currentSceneData.mainButtons);
     })
 
-    // add event listener for tooltip on the "action" form. Will dispaly useful info when mousing over.
+    // add event listener for tooltip on the "action" form. Will display useful info when mousing over.
     Array.from(document.getElementsByClassName("mainBtnActionFormClass")).forEach((el, ind) => {
         el.addEventListener('mouseover', (elmnt) => {
             // get the tool tip text form the array using the action type as index. Action number
-            // comesd from parsing the id of hovered element for the integer at position 13.
+            // comes from parsing the id of hovered element for the integer at position 13.
             let toolTipText = actionToolTipsArrObj[currentSceneData.mainButtons[buttonNumber].Actions[parseInt(el.id.substring(13))].action];
             let toolTipTextBox = document.getElementById("toolTipArea");
             if (toolTipText != undefined) toolTipTextBox.innerHTML = toolTipText;
@@ -342,7 +846,7 @@ function updateMainButtonActions(buttonNumber) {
 // adds event listener to option drop down.
 function addInputListener(el, arrInd, btnNum, actionNumber, objectToChange, log = false) {
     el.addEventListener('input', () => {
-        if (el.value != -1) objectToChange[btnNum].Actions[actionNumber].actionData[arrInd] = el.value;
+        if (el.value != -1) objectToChange[btnNum].Actions[actionNumber].actionData[arrInd] = parseInt(el.value);
         if (log) console.log(objectToChange[btnNum].Actions[actionNumber]);
     })
 }
@@ -363,8 +867,8 @@ function setupActionOptions(el, actionNumber, btnNum, idPrefix, objectToMod) {
     // console.log(currentSceneData.mainButtons[btnNum].Actions[actionNumber]);
 
     switch (el.value) {
-        case "0":
-        case "1": {
+        case "0": // Send Note On
+        case "1": { // Send Note Off
             labelElements[0].innerHTML = "Midi out port: ";
             labelElements[1].innerHTML = "Midi Channel: ";
             labelElements[2].innerHTML = "Midi note value: ";
@@ -411,7 +915,7 @@ function setupActionOptions(el, actionNumber, btnNum, idPrefix, objectToMod) {
             }
             break;
         }
-        case "2": {
+        case "2": { // Send specific midi CC
             labelElements[0].innerHTML = "Midi out port: ";
             labelElements[1].innerHTML = "Midi Channel: ";
             labelElements[2].innerHTML = "Midi CC#: ";
@@ -457,12 +961,12 @@ function setupActionOptions(el, actionNumber, btnNum, idPrefix, objectToMod) {
             }
             break;
         }
-        case "3":
-        case "4":
-        case "5":
-        case "6":
-        case "7":
-        case "8": {
+        case "3": // Send increment / decrement
+        case "4": // Send increment / decrement
+        case "5": // Send increment / decrement
+        case "6": // Send increment / decrement
+        case "7": // Send increment / decrement
+        case "8": { // Send increment / decrement
             labelElements[0].innerHTML = "Midi out port: ";
             labelElements[1].innerHTML = "Midi Channel: ";
             labelElements[2].innerHTML = "Midi CC#: ";
@@ -498,7 +1002,7 @@ function setupActionOptions(el, actionNumber, btnNum, idPrefix, objectToMod) {
             }
             break;
         }
-        case "9":
+        case "9": // Send program change
         {
             labelElements[0].innerHTML = "Midi out port: ";
             labelElements[1].innerHTML = "Midi Channel: ";
@@ -535,9 +1039,9 @@ function setupActionOptions(el, actionNumber, btnNum, idPrefix, objectToMod) {
             }
             break;
         }
-        case "14":
-        case "12":
-        case "13": {
+        case "14": // toggle output 
+        case "12": // turn output on 
+        case "13": { // turn output off
             labelElements[0].innerHTML = "Control port #: ";
             labelElements[1].innerHTML = "Tip or Ring: ";
 
@@ -562,7 +1066,7 @@ function setupActionOptions(el, actionNumber, btnNum, idPrefix, objectToMod) {
             }
             break;
         }
-        case "15": {
+        case "15": { // pulse output
             labelElements[0].innerHTML = "Control port #: ";
             labelElements[1].innerHTML = "Tip or Ring: ";
             labelElements[2].innerHTML = "Pulse time (ms): ";
@@ -588,17 +1092,17 @@ function setupActionOptions(el, actionNumber, btnNum, idPrefix, objectToMod) {
             }
             optionNumber++;
 
-            for (let i = 0; i < 1001; i++) {
+            for (let i = 10; i < 101; i+=10) {
                 let newOption = document.createElement('option');
                 newOption.value = i;
-                newOption.innerHTML = i;
+                newOption.innerHTML = i * 10;
                 if (i == objectToMod[btnNum].Actions[actionNumber].actionData[optionNumber]) newOption.selected = "selected";
                 selectElements[optionNumber].appendChild(newOption);
                 addInputListener(selectElements[optionNumber], optionNumber, btnNum, actionNumber, objectToMod);
             }
             break;
         }
-        case "16": {
+        case "16": { // wait for a time
             labelElements[0].innerHTML = "Minutes: ";
             labelElements[1].innerHTML = "Seconds: ";
             labelElements[2].innerHTML = "Milliseconds: ";
@@ -624,10 +1128,10 @@ function setupActionOptions(el, actionNumber, btnNum, idPrefix, objectToMod) {
             }
             optionNumber++;
 
-            for (let i = 0; i < 1000; i++) {
+            for (let i = 0; i < 100; i++) {
                 let newOption = document.createElement('option');
                 newOption.value = i;
-                newOption.innerHTML = i;
+                newOption.innerHTML = i * 10;
                 if (i == objectToMod[btnNum].Actions[actionNumber].actionData[optionNumber]) newOption.selected = "selected";
                 selectElements[optionNumber].appendChild(newOption);
                 addInputListener(selectElements[optionNumber], optionNumber, btnNum, actionNumber, objectToMod);
@@ -635,7 +1139,7 @@ function setupActionOptions(el, actionNumber, btnNum, idPrefix, objectToMod) {
 
             break;
         }
-        case "17": {
+        case "17": { // jump to scene
             labelElements[0].innerHTML = "Scene Number: ";
 
             let optionNumber = 0;
@@ -651,7 +1155,7 @@ function setupActionOptions(el, actionNumber, btnNum, idPrefix, objectToMod) {
             }
             break;
         }
-        case "18": {
+        case "18": { // external input update interval
             labelElements[0].innerHTML = "Milliseconds: ";
 
             let optionNumber = 0;
@@ -662,6 +1166,80 @@ function setupActionOptions(el, actionNumber, btnNum, idPrefix, objectToMod) {
                 if (i == objectToMod[btnNum].Actions[actionNumber].actionData[optionNumber]) newOption.selected = "selected";
                 selectElements[optionNumber].appendChild(newOption);
                 addInputListener(selectElements[optionNumber], optionNumber, btnNum, actionNumber, objectToMod);
+            }
+            break;
+        }
+        case "19": // send play message
+        case "20": // Send stop message
+        case "21": // send continue message
+        case "22": {// seek to beginning
+            labelElements[0].innerHTML = "Midi out port: ";
+
+            let optionNumber = 0;
+            for (let i = 0; i < 4; i++) {
+                let newOption = document.createElement('option');
+                newOption.value = i;
+                newOption.innerHTML = "Port " + (i + 1);
+                if (i == objectToMod[btnNum].Actions[actionNumber].actionData[optionNumber]) newOption.selected = "selected";
+                selectElements[optionNumber].appendChild(newOption);
+                addInputListener(selectElements[optionNumber], optionNumber, btnNum, actionNumber, objectToMod);
+            }
+            break;
+        }
+        case "23": { // custom midi message
+            labelElements[0].innerHTML = "MIDI out port: ";
+            labelElements[1].innerHTML = "Byte 1: ";
+            labelElements[2].innerHTML = "Byte 2: ";
+            labelElements[3].innerHTML = "Byte 3: ";
+
+            let optionNumber = 0;
+            for (let i = 0; i < 4; i++) {
+                let newOption = document.createElement('option');
+                newOption.value = i;
+                newOption.innerHTML = "Port " + (i + 1);
+                if (i == objectToMod[btnNum].Actions[actionNumber].actionData[optionNumber]) newOption.selected = "selected";
+                selectElements[optionNumber].appendChild(newOption);
+                addInputListener(selectElements[optionNumber], optionNumber, btnNum, actionNumber, objectToMod);
+            }
+            optionNumber++;
+            for (let i = 0; i < 256; i++) {
+                let newOption = document.createElement('option');
+                newOption.value = i;
+                newOption.innerHTML = i;
+                if (i == objectToMod[btnNum].Actions[actionNumber].actionData[optionNumber]) newOption.selected = "selected";
+                selectElements[optionNumber].appendChild(newOption);
+                addInputListener(selectElements[optionNumber], optionNumber, btnNum, actionNumber, objectToMod);
+            }
+            optionNumber++;
+
+            for (let i = 0; i < 256; i++) {
+                let newOption = document.createElement('option');
+                newOption.value = i;
+                newOption.innerHTML = i;
+                if (i == objectToMod[btnNum].Actions[actionNumber].actionData[optionNumber]) newOption.selected = "selected";
+                selectElements[optionNumber].appendChild(newOption);
+                addInputListener(selectElements[optionNumber], optionNumber, btnNum, actionNumber, objectToMod);
+            }
+            optionNumber++;
+
+            for (let i = 0; i < 256; i++) {
+                let newOption = document.createElement('option');
+                newOption.value = i;
+                newOption.innerHTML = i;
+                if (i == objectToMod[btnNum].Actions[actionNumber].actionData[optionNumber]) newOption.selected = "selected";
+                selectElements[optionNumber].appendChild(newOption);
+                addInputListener(selectElements[optionNumber], optionNumber, btnNum, actionNumber, objectToMod);
+            }
+            break;
+        }
+        case "24": // Midi mangler - start function output
+        case "25": // midi mangler - Stop function output
+        case "26": { // Midi mangler - function one shot
+            if(midiManglerEnabled){
+                // do midi mangler stuff
+                labelElements[0].innerHTML = "MIDI Mangler functionality not implemented.";
+            }else{
+                labelElements[0].innerHTML = "MIDI Mangler not enabled.";
             }
             break;
         }
@@ -758,7 +1336,7 @@ function loadResponseIntoSceneData(data) {
                 currentSceneData.extButtons[externalButtonNum].Btn_Mode = dataArray[0];
                 break;
             }
-            // case 0x0060 ... 0x006f: // ext button / exp pedsal actions->action
+            // case 0x0060 ... 0x006f: // ext button / exp pedal actions->action
             case readInt >= 0x0060 && readInt <= 0x006f: {
                 let externalButtonNum = readInt & 0x000f;
                 for (let i = 0; i < ind; i++) {
@@ -766,10 +1344,10 @@ function loadResponseIntoSceneData(data) {
                 }
                 break;
             }
-            // case 0x0400 ... 0x04ff: // ext buttons / exp pedal actions->actiondata[16]
-            case readInt >= 0x0400 && readInt <= 0x04ff: {
+            // case 0x4000 ... 0x40ff: // ext buttons / exp pedal actions->actiondata[16]
+            case readInt >= 0x4000 && readInt <= 0x4fff: {
                 let externalButtonNum = readInt & 0x000f;
-                let actionNumber = (readInt & 0x00f0) >> 4;
+                let actionNumber = (readInt & 0x0ff0) >> 4;
                 for (let i = 0; i < ind; i++) {
                     currentSceneData.extButtons[externalButtonNum].Actions[actionNumber].actionData[i] = dataArray[i];
                 }
@@ -911,7 +1489,7 @@ function buildStringOfSceneData(){
 }
 
 function saveDataToController(){
-    // turn off some event listenres
+    // turn off some event listeners
     let loadButtonEl = document.getElementById("loadDataFromControllerButton");
     loadButtonEl._onClickHolder = loadButtonEl.onclick;
     loadButtonEl.onclick = null;
@@ -1024,3 +1602,7 @@ document.getElementById("saveDataToControllerButton").addEventListener('click',(
 //         currentScene
 //     });
 // }, 1000);
+
+// let thingy = (document.getElementById("outputPort1Pol").value == "true");
+// console.log("value: " + document.getElementById("outputPort1Mode").value + " type: " + typeof(document.getElementById("outputPort1Mode").value));
+// console.log("value: " + thingy + " type: " + typeof(thingy));
