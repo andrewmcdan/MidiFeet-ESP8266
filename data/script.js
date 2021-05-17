@@ -67,8 +67,11 @@ const configToolTipsArrObj = {
     "inputPortConfig": "Configure the input ports. Each port has global settings that apply regardless of the selected scene.",
     0: "Output port mode:<br><br>Each output port can set to one of two modes (or disabled).<br><br>Single Mode: use a TS cable to connect to devices that receive single footswitch input.<br><br>Dual Mode: use a TRS cable to connect to devices that receive dual footswtich input.",
     1: "Input port mode:<br><br>Each input port can set to one of four modes (or disabled).<br><br>Single Switch Mode: use a TS cable to connect to single footswitch.<br><br>Dual Switch Mode: use a TRS cable to connect to a dual footswtich.<br><br>Expression Pedal Min/Max: Connect an expression pedal with a TRS cable. Actions will only execute when the pedal is placed in its minumum or maximum positions.<br><br>Expression Pedal Continuous: Connect an expression pedal with a TRS cable. Action will execute any time the pedal position changes and some associated actions can send the pedal position as data.",
-    2: "Port polarity:<br><br>If the connected device does not behave as expected, try enabling polarity inversion."
+    2: "Port polarity:<br><br>If the connected device does not behave as expected, try enabling polarity inversion.",
+    "config_numScenes": "Set the total number of scenes available for reading / writing.<br><br>This will not delete any saved scenes, but it will make booting up faster if this number is lower."
 };
+
+
 const originLocation = location.href;
 const sceneNumberInput = document.getElementById("sceneNumberInputField");
 const mainBtnNumSelect = document.getElementById("btnNum");
@@ -131,7 +134,7 @@ prefsObj.usbToMidi = [true,true,true,true];
 prefsObj.midiToUsb = [true,true,true,true];
 prefsObj.midiToMidi = [0,0,0,0];
 prefsObj.midiChannel = [1,1,1,1];
-prefsObj.LCDbrightness = 255;
+prefsObj.LCDbrightness = 25;
 prefsObj.arrowPositionsText = {0:"Top Right, Bottom Right", 1:"Top Left, Bottom Right", 2:"Top Right, Bottom Left", 3:"Top Left, Bottom Left"};
 prefsObj.arrowPositions = 0;
 prefsObj.totalNumberOfScenes = 250;
@@ -146,7 +149,7 @@ prefsObj.inPorts.modesText = {0:"Single Switch (TS)", 1:"Dual Switch (TRS)", 2:"
 prefsObj.inPorts.mode = [0,0,0,0];
 prefsObj.inPorts.polarityInv = [false,false,false,false];
 
-console.log(prefsObj);
+// console.log(prefsObj);
 
 let currentSceneData = {};
 currentSceneData.mainButtons = new Array();
@@ -160,7 +163,7 @@ currentSceneData.resetValues = () => {
     for (let i = 0; i < 8; i++) currentSceneData.extButtons[i].resetValues();
     for (let i = 0; i < 4; i++) currentSceneData.output_ports[i].resetValues();
 }
-console.log(currentSceneData);
+// console.log(currentSceneData);
 
 mainBtnNumSelect.addEventListener('change', () => {
     // rewrite displayed actions
@@ -408,7 +411,7 @@ function loadSceneData(sceneNumber, cb, ...cbParams) {
                 line++;
             }
         }
-        console.log(prefsObj);
+        // console.log(prefsObj);
         setConfigElementsByPrefs();
     })
 })()
@@ -436,10 +439,10 @@ function setConfigElementsByPrefs(){
         el.options[optSel].selected = true;
         el.addEventListener('change',updatePrefsObjFromEls);
         el = document.getElementById("inputPort" + i + "Mode");
-        optSel = parseInt(prefsObj.outPorts.mode[i-1]);
+        optSel = parseInt(prefsObj.inPorts.mode[i-1]);
         // console.log(optSel); //////////////////////////////////////////////////
-        if(optSel>2){
-            optSel = 2;
+        if(optSel>6){
+            optSel = 6;
         }
         // console.log(optSel); //////////////////////////////////////////////////
         el.options[optSel].selected = true;
@@ -456,26 +459,72 @@ function setConfigElementsByPrefs(){
         el.options[optSel].selected = true;
         el.addEventListener('change',updatePrefsObjFromEls);
     }
+
     for(let i = 25; i > 0; i--){
         let newOpt = document.createElement("option");
         newOpt.innerHTML = i==25?"25 (MAX)":i;
+        newOpt.value = i;
         // console.log(prefsObj.LCDbrightness);
-        if(prefsObj.LCDbrightness == (i * 10)) newOpt.selected = true;
+        if(prefsObj.LCDbrightness == i) newOpt.selected = true;
         document.getElementById("config_LCD_Backlight").appendChild(newOpt);
-        document.getElementById("config_LCD_Backlight").addEventListener('change',updatePrefsObjFromEls);
     }
+    document.getElementById("config_LCD_Backlight").addEventListener('change',updatePrefsObjFromEls);
 
-    let chanLists = document.getElementsByClassName("MIDI_ChanList");
+    for(let i = 50; i < 1501; i+=50){
+        let newOpt = document.createElement("option");
+        newOpt.innerHTML = i;
+        newOpt.value = i;
+        // console.log(prefsObj.LCDbrightness);
+        if(prefsObj.totalNumberOfScenes == i) newOpt.selected = true;
+        document.getElementById("config_numScenes").appendChild(newOpt);
+    }
+    let el = document.getElementById("config_numScenes");
+    el.addEventListener('change',updatePrefsObjFromEls);
+    el.parentElement.addEventListener('mouseover',(elmnt) =>{
+        let target = elmnt.target;
+        if(target.name == null || target.name == '')target = target.parentElement;
+        let toolTipText = configToolTipsArrObj[target.name];
+        let toolTipTextBox = document.getElementById("toolTipArea");
+        if (toolTipText != undefined) toolTipTextBox.innerHTML = toolTipText;
+        else toolTipTextBox.innerHTML = ' ';
+    })
+    el.parentElement.addEventListener('mouseout',()=>{document.getElementById("toolTipArea").innerHTML = ' ';});
+    
+
+    for(let i = 0; i < 4; i++){
+        let newOpt = document.createElement("option");
+        newOpt.innerHTML = prefsObj.arrowPositionsText[i];
+        // console.log(newOpt);
+        newOpt.value = i;
+        if(prefsObj.arrowPositions == i) newOpt.selected = true;
+        document.getElementById("config_LCD_arrowPos").appendChild(newOpt);
+    }
+    document.getElementById("config_LCD_arrowPos").addEventListener('change',updatePrefsObjFromEls);
+
     let iterator = 0;
-    for(sel of chanLists){
+    for(sel of document.getElementsByClassName("MIDI_ChanList")){
         for(let i = 0; i < 17; i++){
             let newOpt = document.createElement("option");
             newOpt.innerHTML = i==0?"Omni":i;
+            newOpt.value = i;
             if(prefsObj.midiChannel[iterator] == i)newOpt.selected = true;
             sel.appendChild(newOpt);
-            sel.addEventListener('change',updatePrefsObjFromEls);
         }
+        sel.addEventListener('change',updatePrefsObjFromEls);
         iterator++;
+    }
+
+    for(sel of document.getElementsByClassName("thruOpt_select")){
+        let option = sel.id.substring(0,sel.id.length - 2);
+        let optionId = parseInt(sel.id.substring(sel.id.length-1,sel.id.length));
+        for(optEl of sel.children){
+            if(optEl.value == prefsObj[option][optionId]){
+                optEl.selected = true;
+            }
+            if(optEl.value == "true" && prefsObj[option][optionId])optEl.selected = true;
+            if(optEl.value == "false" && prefsObj[option][optionId] == false)optEl.selected = true;
+        }
+        sel.addEventListener('change',updatePrefsObjFromEls);
     }
 
     let saveConfigButtons = document.getElementsByClassName("configSaveButton");
@@ -485,8 +534,10 @@ function setConfigElementsByPrefs(){
 }
 
 function updatePrefsObjFromEls(event){
+    console.log("update prefs object event: " + event.path[0].id);
     let el = event.path[0];
     let value = event.target.value;
+    console.log({value});
     switch(el.id){
         case "outputPort1Mode":
         {
@@ -584,10 +635,100 @@ function updatePrefsObjFromEls(event){
             else prefsObj.inPorts.polarityInv[3] = false;
             break;
         }
+        case "config_LCD_arrowPos":
+        {
+            prefsObj.arrowPositions = parseInt(value);
+            break;
+        }
+        case "config_LCD_Backlight":
+        {
+            prefsObj.LCDbrightness = parseInt(value);
+            break;
+        }
+        case "MIDI_ChanList_0":
+        {
+            prefsObj.midiChannel[0] = parseInt(value);
+            break;
+        }
+        case "MIDI_ChanList_1":
+        {
+            prefsObj.midiChannel[1] = parseInt(value);
+            break;
+        }
+        case "MIDI_ChanList_2":
+        {
+            prefsObj.midiChannel[2] = parseInt(value);
+            break;
+        }
+        case "MIDI_ChanList_3":
+        {
+            prefsObj.midiChannel[3] = parseInt(value);
+            break;
+        }
+        case "midiToUsb_0":
+        {
+            prefsObj.midiToUsb[0] = value=="true";
+            break;
+        }
+        case "midiToUsb_1":
+        {
+            prefsObj.midiToUsb[1] = value=="true";
+            break;
+        }
+        case "midiToUsb_2":
+        {
+            prefsObj.midiToUsb[2] = value=="true";
+            break;
+        }
+        case "midiToUsb_3":
+        {
+            prefsObj.midiToUsb[3] = value=="true";
+            break;
+        }
+        case "usbToMidi_0":
+        {
+            prefsObj.usbToMidi[0] = value=="true";
+            break;
+        }
+        case "usbToMidi_1":
+        {
+            prefsObj.usbToMidi[1] = value=="true";
+            break;
+        }
+        case "usbToMidi_2":
+        {
+            prefsObj.usbToMidi[2] = value=="true";
+            break;
+        }
+        case "usbToMidi_3":
+        {
+            prefsObj.usbToMidi[3] = value=="true";
+            break;
+        }
+        case "midiToMidi_0":
+        {
+            prefsObj.midiToMidi[0] = parseInt(value);
+            break;
+        }
+        case "midiToMidi_1":
+        {
+            prefsObj.midiToMidi[1] = parseInt(value);
+            break;
+        }
+        case "midiToMidi_2":
+        {
+            prefsObj.midiToMidi[2] = parseInt(value);
+            break;
+        }
+        case "midiToMidi_3":
+        {
+            prefsObj.midiToMidi[3] = parseInt(value);
+            break;
+        }
         default:
             break;
     }
-    console.log(prefsObj);
+    // console.log(prefsObj);
 }
 
 function savePrefs(){
@@ -645,6 +786,22 @@ function savePrefs(){
     outData += '\n';
     console.log(outData);
     //@todo save prefs to teensy SD
+
+    let sceneSaveUrl = originLocation + "savePrefs/";
+    let formData = new FormData();
+    formData.append("data", new Blob([outData], { type: "text/plain" }), "prefs");
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            console.log(this.responseText);
+            console.log(this.readyState);
+            console.log(this.status);
+        }else{
+            console.log(this.responseText);
+        }
+    };
+    xhttp.open("POST", sceneSaveUrl, true);
+    xhttp.send(formData);
 }
 
 actionCount = 0;
@@ -689,7 +846,7 @@ function updateExtPedalPortActions(portNumber) {
     let extPedalActionsElement = document.getElementById("extPedalsActions");
     let extPedalPortMode = currentSceneData.extButtons[portNumber].Btn_Mode;
     let actionsElementHTML = "Port Mode: <select id=\"extPedalPortModeSelect\"><option value=\"0\">Single Button</option><option value=\"1\">Dual Button</option><option value=\"2\">Expression Pedal - Min / Max</option><option value=\"3\">Expression Pedal - Continuous</option><option value=\"255\">Disabled</option></select></br>";
-    console.log(extPedalPortMode);
+    // console.log(extPedalPortMode);
     let secondaryOptionId = "";
     switch (extPedalPortMode) {
         case "0": { // Single Button mode
@@ -763,7 +920,7 @@ function updateExtPedalPortActions(portNumber) {
             currentSceneData.extButtons[actionNumber < 50 ? portNumber : portNumber + 4].Actions[actionNumber < 50 ? actionNumber : actionNumber - 50].action = el.target.value;
             // once the currentSceneData object has been updated, redo the layout...
             updateExtPedalPortActions(portNumber);
-            console.log(currentSceneData);
+            // console.log(currentSceneData);
         });
         setupActionOptions(element, actionNumber, actionNumber < 50 ? portNumber : portNumber + 4, "extPedlAction", currentSceneData.extButtons);
     })
@@ -1359,7 +1516,7 @@ function loadResponseIntoSceneData(data) {
                 readChar = data[iterator++]; // read through comment if present
         }
     }
-    console.log(currentSceneData);
+    // console.log(currentSceneData);
     return data;
 }
 
@@ -1501,17 +1658,17 @@ function saveDataToController(){
     sceneNumSelEl.onchange = null;
 
 
-    console.log("lets save some data");
+    // console.log("lets save some data");
     let sceneSaveUrl = originLocation + "saveScene/";
     let formData = new FormData();
-    console.log({currentScene});
+    // console.log({currentScene});
     formData.append("data", new Blob([buildStringOfSceneData()], { type: "text/plain" }), currentScene.toString());
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-            console.log(this.responseText);
-            console.log(this.readyState);
-            console.log(this.status);
+            // console.log(this.responseText);
+            // console.log(this.readyState);
+            // console.log(this.status);
 
             // turn event listeners back on
             loadButtonEl.onclick = loadButtonEl._onClickHolder;
@@ -1524,7 +1681,7 @@ function saveDataToController(){
             sceneNumSelEl._onChangeHolder = null;;
 
         }else{
-            console.log(this.responseText);
+            // console.log(this.responseText);
         }
     };
     xhttp.open("POST", sceneSaveUrl, true);

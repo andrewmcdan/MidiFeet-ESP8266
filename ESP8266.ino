@@ -1,3 +1,14 @@
+/**
+ *  Firmware sketch for ESP8266 in Midi foot controller.
+ *
+ *  Board:          Generic ESP8266
+ *  Upload Speed:   115200
+ *  Flash size:     4MB (2MB filesystem)
+ *  Flash Mode:     QIO fast
+ *  All others:     default
+ *  
+ */
+
 // ignores most of the code
 // cSpell:ignoreRegExp /(^(?!\s*(\/\/)|(\/\*)).*[;:)}=,{])/gm
 
@@ -1056,9 +1067,115 @@ void handleNumberOfScenesRequest(){
     replyOKWithMsg("Error:" + String(err));
 }
 
-void handlePrefsRequest(){
 
+void handlePrefsSave(){
+    server.setChunkedMode(false);
+    server.setContentLength(CONTENT_LENGTH_NOT_SET);
+    if(!fsOK){
+        return replyServerError("FS INIT ERROR");
+    }
+
+    HTTPUpload& upload = server.upload();
+
+    if(upload.status == UPLOAD_FILE_START){
+        String fileName = "/tmpPref.txt";
+        uploadFile = fileSystem->open(fileName, "w+");
+        if(!uploadFile){
+            return replyServerError("Create temp prefs file failed");
+        }else{
+
+        }
+
+    }else if(upload.status == UPLOAD_FILE_WRITE){
+        if(uploadFile){
+            size_t bytesWritten = uploadFile.write(upload.buf, upload.currentSize);
+            if(bytesWritten != upload.currentSize){
+                return replyServerError("Write Failed");
+            }
+        }else{
+            return replyServerError("File error");
+        }
+    }else if(upload.status == UPLOAD_FILE_END){
+        if(uploadFile){
+            uploadFile.close();
+            int erroVal = sendTempPrefsToTeensy();
+            String response = "file uploaded, written, and closed. Sent to Teensy with " + String(erroVal) + " errors.";
+            server.send(200, "text/html", response);
+        }else{
+            return replyServerError("File error");
+        }
+    }else{
+        return replyServerError("Error!!");
+    }
+}
+
+int sendTempPrefsToTeensy(){
+    uint8_t dataToSendArr[16];
+    dataToSendArr[0]=0;
+    dataToSendArr[1]=0;
+    dataToSendArr[2]=0;
+    dataToSendArr[3]=0;
+    uint8_t command = 0;
+    int err = 0;
+    uint32_t byteNumber = 0;
+    sendDataToTeensy(ESP_SERIAL_COMMANDS_Message::RequestToSavePrefsFile|ESP_SERIAL_COMMANDS_Message::isMessageNotPacket,dataToSendArr,4,false);
+    uint8_t pSizeAndErr[] = {255,255};
+    getTeensySerialData(pSizeAndErr);
+    if(pSizeAndErr[0]==6){
+        command = ESP_ShortMessage.StartSequence_8 & 0x0f;
+        if((command!=ESP_SERIAL_COMMANDS_Message::OkToStartSendingData) || (pSizeAndErr[1]>0)){
+            err+=8;
+            return err;
+        }
+    }else if(pSizeAndErr[0]==24){
+        command = ESP_SerPacket.startSequence_32 & 0xf0;
+        err=ESP_SerPacket.startSequence_32 & 0xff;;
+        return err;
+    }else{
+        err=128;
+        return err;
+    }
     
+    File uploadingFile = fileSystem->open("/tmpPref.txt","r");
+
+    if(!uploadingFile){
+        err=99;
+        return err;
+    }
+
+    while(uploadingFile.available()){
+        uint8_t readByte;
+        bool isLast = false;
+        for(uint8_t i=0;i<16;i++){
+            if(uploadingFile.available()){
+                readByte=uploadingFile.read();
+                dataToSendArr[i]=readByte;
+                byteNumber++;
+            }else{
+                dataToSendArr[i]=0;
+                isLast=true;
+            }
+        }
+        if(!isLast){
+            sendDataToTeensy((byteNumber==16?ESP_SERIAL_COMMANDS_Packet::StartSendData:ESP_SERIAL_COMMANDS_Packet::ContinueSendData)|ESP_SERIAL_COMMANDS_Packet::SavePreferences,dataToSendArr,16,true);
+            getTeensySerialData(pSizeAndErr);
+            if(pSizeAndErr[1]>0){
+                err+=16 + (pSizeAndErr[1] + 100);
+                break;
+            }
+            if((ESP_ShortMessage.StartSequence_8&0x0f)!=ESP_SERIAL_COMMANDS_Message::OkToContinueSendingData){
+                err+=8;
+                break;
+            }
+        }else{
+            sendDataToTeensy(ESP_SERIAL_COMMANDS_Packet::EndSendData|ESP_SERIAL_COMMANDS_Packet::SavePreferences,dataToSendArr,16,true);
+        }
+    }
+    uploadingFile.close();
+    return err;
+}
+
+void handlePrefsRequest(){   
     // int numberOfArgs = server.args();
     // String argOne = server.arg(0);
     // String argOneName = server.argName(0);
@@ -1077,7 +1194,7 @@ void handlePrefsRequest(){
     // server.sendContent("command: " + String(command,HEX) +"\n");
     // server.sendContent("msg: " + String(msg[0],HEX)+String(msg[1],HEX)+String(msg[2],HEX)+String(msg[3],HEX) +"\n");
     sendDataToTeensy(ESP_SERIAL_COMMANDS_Message::RequestForPreferences|ESP_SERIAL_COMMANDS_Message::isMessageNotPacket);
-    server.sendContent("sent request to teensy\n");
+    // server.sendContent("sent request to teensy\n");
     size_t count = 0;
     // while((Serial.available()==0)&&(count<2500)){
     //     count++;
@@ -1281,6 +1398,8 @@ void setup(void)
     server.on("/numScenes", HTTP_GET, handleNumberOfScenesRequest);
 
     server.on("/prefs", HTTP_GET, handlePrefsRequest);
+
+    server.on("/savePrefs/", HTTP_POST, replyOK, handlePrefsSave);
 
     // Default handler for all URIs not defined above
     // Use it to read files from filesystem

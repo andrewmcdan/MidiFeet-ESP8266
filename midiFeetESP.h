@@ -23,6 +23,7 @@ enum ESP_SERIAL_COMMANDS_Message
     OkToContinueSendingData = 0x06,
     RequestForTotalNumberOfScene = 0x07,
     RequestToSaveSceneFile = 0x08,
+    RequestToSavePrefsFile = 0x09,
     isMessageNotPacket = 0xa0,
 };
 

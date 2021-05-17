@@ -128,7 +128,9 @@
                             <option value=1>Dual Switch (TRS)</option>
                             <option value=2>Expression Pedal (Min / Max)</option>
                             <option value=3>Expression Pedal (Continuous)</option>
-                            <option value=4>Disabled</option>
+                            <option value=4>Multi-Button</option>
+                            <option value=5>Auto Detect</option>
+                            <option value=6>Disabled</option>
                         </select>
                         <label>Polarity</label>
                         <select id="inputPort1Pol">
@@ -145,7 +147,9 @@
                             <option value=1>Dual Switch (TRS)</option>
                             <option value=2>Expression Pedal (Min / Max)</option>
                             <option value=3>Expression Pedal (Continuous)</option>
-                            <option value=4>Disabled</option>
+                            <option value=4>Multi-Button</option>
+                            <option value=5>Auto Detect</option>
+                            <option value=6>Disabled</option>
                         </select>
                         <label>Polarity</label>
                         <select id="inputPort2Pol">
@@ -162,7 +166,9 @@
                             <option value=1>Dual Switch (TRS)</option>
                             <option value=2>Expression Pedal (Min / Max)</option>
                             <option value=3>Expression Pedal (Continuous)</option>
-                            <option value=4>Disabled</option>
+                            <option value=4>Multi-Button</option>
+                            <option value=5>Auto Detect</option>
+                            <option value=6>Disabled</option>
                         </select>
                         <label>Polarity</label>
                         <select id="inputPort3Pol">
@@ -179,7 +185,9 @@
                             <option value=1>Dual Switch (TRS)</option>
                             <option value=2>Expression Pedal (Min / Max)</option>
                             <option value=3>Expression Pedal (Continuous)</option>
-                            <option value=4>Disabled</option>
+                            <option value=4>Multi-Button</option>
+                            <option value=5>Auto Detect</option>
+                            <option value=6>Disabled</option>
                         </select>
                         <label>Polarity</label>
                         <select id="inputPort4Pol">
@@ -194,99 +202,113 @@
                 <div style="border: 1px solid black; padding: 3px;">Midi Passthrough
                     <form>USB Midi to Hardware MIDI
                         <label>Port 1</label>
-                        <select id=" ">
+                        <select id="usbToMidi_0" class="thruOpt_select">
                             <option value="true">Enabled</option>
                             <option value="false">Disabled</option>
                         </select>
                         <label>Port 2</label>
-                        <select id=" ">
+                        <select id="usbToMidi_1" class="thruOpt_select">
                             <option value="true">Enabled</option>
                             <option value="false">Disabled</option>
                         </select>
                         <label>Port 2</label>
-                        <select id=" ">
+                        <select id="usbToMidi_2" class="thruOpt_select">
                             <option value="true">Enabled</option>
                             <option value="false">Disabled</option>
                         </select>
                         <label>Port 2</label>
-                        <select id=" ">
+                        <select id="usbToMidi_3" class="thruOpt_select">
                             <option value="true">Enabled</option>
                             <option value="false">Disabled</option>
                         </select>
                     </form>
                     <form>Hardware Midi to USB MIDI
                         <label>Port 1</label>
-                        <select id=" ">
+                        <select id="midiToUsb_0" class="thruOpt_select">
                             <option value="true">Enabled</option>
                             <option value="false">Disabled</option>
                         </select>
                         <label>Port 2</label>
-                        <select id=" ">
+                        <select id="midiToUsb_1" class="thruOpt_select">
                             <option value="true">Enabled</option>
                             <option value="false">Disabled</option>
                         </select>
                         <label>Port 2</label>
-                        <select id=" ">
+                        <select id="midiToUsb_2" class="thruOpt_select">
                             <option value="true">Enabled</option>
                             <option value="false">Disabled</option>
                         </select>
                         <label>Port 2</label>
-                        <select id=" ">
+                        <select id="midiToUsb_3" class="thruOpt_select">
                             <option value="true">Enabled</option>
                             <option value="false">Disabled</option>
                         </select>
                     </form>
                     <form>Hardware Midi to Hardware MIDI
                         <label>Port 1</label>
-                        <select id=" ">
+                        <select id="midiToMidi_0" class="thruOpt_select">
                             <option value=0>Thru off</option>
                             <option value=1>Pass all messages</option>
                             <option value=2>Pass only same channel</option>
                             <option value=4>Pass only different channel</option>
                         </select>
                         <label>Port 2</label>
-                        <select id=" ">
+                        <select id="midiToMidi_1" class="thruOpt_select">
                             <option value=0>Thru off</option>
                             <option value=1>Pass all messages</option>
                             <option value=2>Pass only same channel</option>
                             <option value=4>Pass only different channel</option>
                         </select>
                         <label>Port 2</label>
-                        <select id=" ">
+                        <select id="midiToMidi_2" class="thruOpt_select">
                             <option value=0>Thru off</option>
                             <option value=1>Pass all messages</option>
                             <option value=2>Pass only same channel</option>
                             <option value=4>Pass only different channel</option>
                         </select>
                         <label>Port 2</label>
-                        <select id=" ">
+                        <select id="midiToMidi_3" class="thruOpt_select">
                             <option value=0>Thru off</option>
                             <option value=1>Pass all messages</option>
                             <option value=2>Pass only same channel</option>
                             <option value=4>Pass only different channel</option>
-                        </select>
-                    </form>
-                </div>
-                <div style="border: 1px solid black; padding: 3px; margin-top: 3px;">Midi Receive Channel
-                    <form>
-                        <label>Port 1</label>
-                        <select id=" " class="MIDI_ChanList">
-                        </select>
-                        <label>Port 2</label>
-                        <select id=" " class="MIDI_ChanList">
-                        </select>
-                        <label>Port 2</label>
-                        <select id=" " class="MIDI_ChanList">
-                        </select>
-                        <label>Port 2</label>
-                        <select id=" " class="MIDI_ChanList">
                         </select>
                     </form>
                 </div>
                 <div style="border: 1px solid black; padding: 3px; margin-top: 3px;">
-                    <form>
-                        <label>LCD backlight Brightness</label>
+                    <form name="MIDI_ChanList">Midi Receive Channel
+                        <label>Port 1</label>
+                        <select id="MIDI_ChanList_0" class="MIDI_ChanList">
+                        </select>
+                        <label>Port 2</label>
+                        <select id="MIDI_ChanList_1" class="MIDI_ChanList">
+                        </select>
+                        <label>Port 2</label>
+                        <select id="MIDI_ChanList_2" class="MIDI_ChanList">
+                        </select>
+                        <label>Port 2</label>
+                        <select id="MIDI_ChanList_3" class="MIDI_ChanList">
+                        </select>
+                    </form>
+                </div>
+                <div style="border: 1px solid black; padding: 3px; margin-top: 3px;">
+                    <form name="config_LCD_Backlight">LCD - Backlight Brightness
+                        <label></label>
                         <select id="config_LCD_Backlight">
+                        </select>
+                    </form>
+                </div>
+                <div style="border: 1px solid black; padding: 3px; margin-top: 3px;">
+                    <form name="config_LCD_arrowPos">LCD - Arrow positions
+                        <label></label>
+                        <select id="config_LCD_arrowPos">
+                        </select>
+                    </form>
+                </div>
+                <div style="border: 1px solid black; padding: 3px; margin-top: 3px;">
+                    <form name="config_numScenes">Total number of scenes
+                        <label></label>
+                        <select id="config_numScenes">
                         </select>
                     </form>
                 </div>
