@@ -935,9 +935,10 @@ function updateExtPedalPortActions(portNumber) {
                 // console.log(dropDownEl);
                 if (ind2 != 0) {
                     let newOption = document.createElement('option');
-                    newOption.value = "var";
+                    newOption.value = "129";
                     newOption.innerHTML = "Vary";
                     dropDownEl.appendChild(newOption)
+                    // @todo need to make this value selected if the loaded data is "128"
                 }
             })
         })

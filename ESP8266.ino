@@ -1331,6 +1331,12 @@ void setup(void)
         DBG_OUTPUT_PORT.printf(ssid);
     }
 
+    // @TODO need to check button to see if user wants to boot into AP mode.
+    // otherwise, read wifi AP name and password from file to connect to. If connection
+    // fails, read the next AP name and password. If all get read, go to AP mode.
+
+    // In AP mode, we'll present to user with a webpage that lists all availble AP's 
+    // and let the user choose one. Then save that AP's info to the wifi.txt file.
     if (fsOK)
     {
         String path = "/wifi.txt";
